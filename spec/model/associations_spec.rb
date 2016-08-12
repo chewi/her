@@ -236,6 +236,13 @@ describe Her::Model::Associations do
       expect { @user_without_included_data.comments.reload }.to change { @user_without_included_data.comments.first.object_id }
     end
 
+    it "returns an empty collection without fetching when [] is a parameter" do
+      Foo::Comment.should_not_receive(:request)
+      comments = @user_without_included_data.comments.where(:foo_id => [])
+      comments.should respond_to(:length)
+      comments.size.should eql 0
+    end
+
     it "maps an array of included data through has_one" do
       expect(@user_with_included_data.role).to be_a(Foo::Role)
       expect(@user_with_included_data.role.object_id).to eq(@user_with_included_data.role.object_id)
