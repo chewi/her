@@ -317,6 +317,19 @@ describe Her::Model::Associations do
       expect(params[:organization]).not_to be_empty
     end
 
+    it "changes the belongs_to foreign key value when a new resource is assigned" do
+      org1 = Foo::Organization.find(1)
+      @user_without_included_data.organization = org1
+      expect(@user_without_included_data.organization).to eq(org1)
+      expect(@user_without_included_data.changes).to eq('organization_id' => [2, 1])
+    end
+
+    it "nullifies the belongs_to foreign key value when a nil resource is assigned" do
+      @user_without_included_data.organization = nil
+      expect(@user_without_included_data.organization).to be_nil
+      expect(@user_without_included_data.changes).to eq('organization_id' => [2, nil])
+    end
+
     [:create, :save_existing, :destroy].each do |type|
       context "after #{type}" do
         let(:subject) { send("user_with_included_data_after_#{type}") }
