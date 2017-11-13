@@ -254,16 +254,39 @@ module Her
         # Build a new resource with the given attributes.
         # If the request_new_object_on_build flag is set, the new object is requested via API.
         def build(attributes = {})
-          params = attributes
-          return self.new(params) unless self.request_new_object_on_build?
+          return self.new(attributes) unless self.request_new_object_on_build?
+          params = attributes.merge(self.primary_key => 'new')
 
-          path = self.build_request_path(params.merge(self.primary_key => 'new'))
-          method = self.method_for(:new)
+          assoc_names = []
+          associations[:belongs_to].each do |assoc|
+            if params.key?(assoc[:foreign_key].to_sym) || params.key?(:"_#{assoc[:foreign_key]}")
+              if params.delete(assoc[:name])
+                # Remove associated data when the foreign key is
+                # present as that implies the resource already exists.
+                assoc_names << assoc[:name]
+              else
+                # TODO: Apply to_params to new associations and
+                # reassign them using the data_key.
+              end
+            end
+          end
+
+          params.merge!(
+            :_method => self.method_for(:new),
+            :_path => self.build_request_path(params, remove_used: true)
+          )
 
           resource = nil
-          self.request(params.merge(:_method => method, :_path => path)) do |parsed_data, response|
+          self.request(params) do |parsed_data, response|
             if response.success?
               resource = self.new_from_parsed_data(parsed_data)
+
+              # Assign associated resources that we already have
+              # cached locally to prevent them being refetched.
+              assoc_names.each do |name|
+                value = attributes[name]
+                resource.send(name).association.assign(value)
+              end
             end
           end
           resource

@@ -40,10 +40,29 @@ module Her
         end
 
         # @private
-        def set_missing_from_parent(missing, attributes)
+        def inverse
+          if @opts[:inverse_of]
+            iname = @opts[:inverse_of].to_sym
+            inverse = @klass.associations[:belongs_to].find { |assoc| assoc[:name].to_sym == iname }
+            raise Her::Errors::AssociationUnknownError.new("Unknown association name :#{iname}") unless inverse
+          else
+            inverse = @klass.associations[:belongs_to].find { |assoc| assoc[:name].to_sym == @parent_name }
+          end
+
+          inverse
+        end
+
+        # @private
+        def set_missing_from_parent(missing, attributes, inverse = self.inverse)
           missing.each do |m|
-            id = @parent.get_attribute(m) || @parent.get_attribute(:"_#{m}")
-            attributes[:"_#{m}"] = id if id
+            if inverse && inverse[:foreign_key].to_sym == m
+              attributes[m] = @parent.id
+            elsif :"#{@parent_name}_id" == m
+              attributes[:"_#{m}"] = @parent.id
+            else
+              id = @parent.get_attribute(m) || @parent.get_attribute(:"_#{m}")
+              attributes[:"_#{m}"] = id if id
+            end
           end
         end
 
@@ -73,10 +92,19 @@ module Her
 
         # @private
         def build_with_inverse(attributes = {})
+          inverse = self.inverse
+
+          attributes =
+            if inverse
+              attributes.merge(inverse[:name] => @parent)
+            else
+              attributes.merge(:"#{@parent_name}_id" => @parent.id)
+            end
+
           retried = false
 
           begin
-            resource = @klass.build(attributes.merge(:"#{@parent.singularized_resource_name}_id" => @parent.id))
+            resource = @klass.build(attributes)
             resource.request_path
             resource
           rescue Her::Errors::PathError => e
@@ -86,7 +114,7 @@ module Her
               raise
             end
 
-            set_missing_from_parent e.missing_parameters, attributes
+            set_missing_from_parent e.missing_parameters, attributes, inverse
 
             if resource
               resource
