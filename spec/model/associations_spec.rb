@@ -11,7 +11,7 @@ describe Her::Model::Associations do
 
       describe "[:has_many]" do
         subject { super()[:has_many] }
-        it { is_expected.to eql [{ name: :comments, data_key: :comments, default: [], class_name: "Comment", path: "/comments", inverse_of: nil }] }
+        it { is_expected.to eql [{ name: :comments, data_key: :comments, default: [], class_name: "Comment", path: "/comments", inverse_of: nil, autosave: true }] }
       end
     end
 
@@ -23,7 +23,7 @@ describe Her::Model::Associations do
 
       describe "[:has_many]" do
         subject { super()[:has_many] }
-        it { is_expected.to eql [{ name: :comments, data_key: :comments, default: [], class_name: "Comment", path: "/comments", inverse_of: nil }, { name: :posts, data_key: :posts, default: [], class_name: "Post", path: "/posts", inverse_of: nil }] }
+        it { is_expected.to eql [{ name: :comments, data_key: :comments, default: [], class_name: "Comment", path: "/comments", inverse_of: nil, autosave: true }, { name: :posts, data_key: :posts, default: [], class_name: "Post", path: "/posts", inverse_of: nil, autosave: true }] }
       end
     end
 
@@ -32,7 +32,7 @@ describe Her::Model::Associations do
 
       describe "[:has_one]" do
         subject { super()[:has_one] }
-        it { is_expected.to eql [{ name: :category, data_key: :category, default: nil, class_name: "Category", path: "/category" }] }
+        it { is_expected.to eql [{ name: :category, data_key: :category, default: nil, class_name: "Category", path: "/category", autosave: true }] }
       end
     end
 
@@ -44,7 +44,7 @@ describe Her::Model::Associations do
 
       describe "[:has_one]" do
         subject { super()[:has_one] }
-        it { is_expected.to eql [{ name: :category, data_key: :category, default: nil, class_name: "Category", path: "/category" }, { name: :role, data_key: :role, default: nil, class_name: "Role", path: "/role" }] }
+        it { is_expected.to eql [{ name: :category, data_key: :category, default: nil, class_name: "Category", path: "/category", autosave: true }, { name: :role, data_key: :role, default: nil, class_name: "Role", path: "/role", autosave: true }] }
       end
     end
 
@@ -53,7 +53,7 @@ describe Her::Model::Associations do
 
       describe "[:belongs_to]" do
         subject { super()[:belongs_to] }
-        it { is_expected.to eql [{ name: :organization, data_key: :organization, default: nil, class_name: "Organization", foreign_key: "organization_id", path: "/organizations/:id" }] }
+        it { is_expected.to eql [{ name: :organization, data_key: :organization, default: nil, class_name: "Organization", foreign_key: "organization_id", path: "/organizations/:id", autosave: true }] }
       end
     end
 
@@ -65,7 +65,7 @@ describe Her::Model::Associations do
 
       describe "[:belongs_to]" do
         subject { super()[:belongs_to] }
-        it { is_expected.to eql [{ name: :organization, data_key: :organization, default: nil, class_name: "Organization", foreign_key: "organization_id", path: "/organizations/:id" }, { name: :family, data_key: :family, default: nil, class_name: "Family", foreign_key: "family_id", path: "/families/:id" }] }
+        it { is_expected.to eql [{ name: :organization, data_key: :organization, default: nil, class_name: "Organization", foreign_key: "organization_id", path: "/organizations/:id", autosave: true }, { name: :family, data_key: :family, default: nil, class_name: "Family", foreign_key: "family_id", path: "/families/:id", autosave: true }] }
       end
     end
   end
@@ -80,7 +80,7 @@ describe Her::Model::Associations do
 
         describe "[:has_many]" do
           subject { super()[:has_many] }
-          it { is_expected.to eql [{ name: :comments, data_key: :user_comments, default: {}, class_name: "Post", path: "/comments", inverse_of: :admin }] }
+          it { is_expected.to eql [{ name: :comments, data_key: :user_comments, default: {}, class_name: "Post", path: "/comments", inverse_of: :admin, autosave: true }] }
         end
       end
 
@@ -89,7 +89,7 @@ describe Her::Model::Associations do
 
         describe "[:has_one]" do
           subject { super()[:has_one] }
-          it { is_expected.to eql [{ name: :category, data_key: :topic, default: nil, class_name: "Topic", foreign_key: "topic_id", path: "/category" }] }
+          it { is_expected.to eql [{ name: :category, data_key: :topic, default: nil, class_name: "Topic", foreign_key: "topic_id", path: "/category", autosave: true }] }
         end
       end
 
@@ -98,7 +98,7 @@ describe Her::Model::Associations do
 
         describe "[:belongs_to]" do
           subject { super()[:belongs_to] }
-          it { is_expected.to eql [{ name: :organization, data_key: :org, default: true, class_name: "Business", foreign_key: "org_id", path: "/organizations/:id" }] }
+          it { is_expected.to eql [{ name: :organization, data_key: :org, default: true, class_name: "Business", foreign_key: "org_id", path: "/organizations/:id", autosave: true }] }
         end
       end
     end
@@ -116,7 +116,7 @@ describe Her::Model::Associations do
 
         describe "[:has_many]" do
           subject { super()[:has_many] }
-          it { is_expected.to eql [{ name: :comments, data_key: :comments, default: [], class_name: "Post", path: "/comments", inverse_of: nil }] }
+          it { is_expected.to eql [{ name: :comments, data_key: :comments, default: [], class_name: "Post", path: "/comments", inverse_of: nil, autosave: true }] }
         end
       end
     end
@@ -348,6 +348,139 @@ describe Her::Model::Associations do
       params = @user_with_included_data.to_params
       expect(params[:organization]).to be_kind_of(Hash)
       expect(params[:organization]).not_to be_empty
+    end
+
+    context 'and send_only_modified_attributes is true' do
+      before do
+        Her::API.default_api.options[:send_only_modified_attributes] = true
+      end
+
+      it 'does not include unmodified has_many relationships in params' do
+        params = @user_with_included_data.to_params
+        expect(params[:comments]).to be_nil
+      end
+
+      it 'does not include an unmodified has_one relationship in params' do
+        params = @user_with_included_data.to_params
+        expect(params[:role]).to be_nil
+      end
+
+      it 'does not include an unmodified belongs_to relationship in params' do
+        params = @user_with_included_data.to_params
+        expect(params[:organization]).to be_nil
+      end
+
+      it 'includes a modified has_many relationship in params' do
+        @user_with_included_data.comments.last.body = 'Merry Christmas!'
+        params = @user_with_included_data.to_params
+        expect(params[:comments]).to be_kind_of(Array)
+        expect(params[:comments].length).to eq(1)
+      end
+
+      it 'includes a modified has_one relationship in params' do
+        @user_with_included_data.role.body = 'Guest'
+        params = @user_with_included_data.to_params
+        expect(params[:role]).to be_kind_of(Hash)
+        expect(params[:role]).not_to be_empty
+      end
+
+      it 'includes a modified belongs_to relationship in params' do
+        @user_with_included_data.organization.name = 'New Company'
+        params = @user_with_included_data.to_params
+        expect(params[:organization]).to be_kind_of(Hash)
+        expect(params[:organization]).not_to be_empty
+      end
+    end
+
+    context 'and autosave as nil' do
+      before do
+        Foo::User.associations.values.each do |assocs|
+          assocs.each do |assoc|
+            assoc[:autosave] = nil
+          end
+        end
+      end
+
+      it 'does not include persisted has_many relationships in params' do
+        params = @user_with_included_data.to_params
+        expect(params[:comments]).to be_nil
+      end
+
+      it 'does not include a persisted has_one relationship in params' do
+        params = @user_with_included_data.to_params
+        expect(params[:role]).to be_nil
+      end
+
+      it 'does not include a persisted belongs_to relationship in params' do
+        params = @user_with_included_data.to_params
+        expect(params[:organization]).to be_nil
+      end
+
+      it 'includes a new has_many relationship in params' do
+        new = @user_with_included_data.comments.build(body: 'Merry Christmas!')
+        @user_with_included_data.comments << new
+        params = @user_with_included_data.to_params
+        expect(params[:comments]).to be_kind_of(Array)
+        expect(params[:comments].length).to eq(1)
+      end
+
+      it 'includes a new has_one relationship in params' do
+        @user_with_included_data.role = Foo::Role.build(body: 'User')
+        params = @user_with_included_data.to_params
+        expect(params[:role]).to be_kind_of(Hash)
+        expect(params[:role]).not_to be_empty
+      end
+
+      it 'includes a new belongs_to relationship in params' do
+        @user_with_included_data.organization = Foo::Organization.build(name: 'Bluth Company')
+        params = @user_with_included_data.to_params
+        expect(params[:organization]).to be_kind_of(Hash)
+        expect(params[:organization]).not_to be_empty
+      end
+    end
+
+    context 'and autosave as false' do
+      before do
+        Foo::User.associations.values.each do |assocs|
+          assocs.each do |assoc|
+            assoc[:autosave] = false
+          end
+        end
+      end
+
+      it 'does not include persisted has_many relationships in params' do
+        params = @user_with_included_data.to_params
+        expect(params[:comments]).to be_nil
+      end
+
+      it 'does not include a persisted has_one relationship in params' do
+        params = @user_with_included_data.to_params
+        expect(params[:role]).to be_nil
+      end
+
+      it 'does not include a persisted belongs_to relationship in params' do
+        params = @user_with_included_data.to_params
+        expect(params[:organization]).to be_nil
+      end
+
+      it 'does not include a new has_many relationship in params' do
+        new = @user_with_included_data.comments.build(body: 'Merry Christmas!')
+        @user_with_included_data.comments << new
+        params = @user_with_included_data.to_params
+        expect(params[:comments]).to be_nil
+      end
+
+      it 'does not include a new has_one relationship in params' do
+        @user_with_included_data.role = Foo::Role.build(body: 'User')
+        params = @user_with_included_data.to_params
+        expect(params[:role]).to be_nil
+      end
+
+      it 'does not include a new belongs_to relationship in params' do
+        @user_with_included_data.organization = Foo::Organization.build(name: 'Bluth Company')
+        params = @user_with_included_data.to_params
+        expect(params[:organization]).to be_nil
+      end
     end
 
     it "changes the belongs_to foreign key value when a new resource is assigned" do
