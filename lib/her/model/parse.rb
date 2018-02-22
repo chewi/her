@@ -43,6 +43,17 @@ module Her
 
           embed_params!(attributes, filtered_attributes)
 
+          # Faraday does not serialize everything thrown at it and
+          # some parameters may still be complex objects by this point
+          # so attempt to serialize further where possible. This is
+          # useful for classes that use ActiveModel but not Her.
+          filtered_attributes.each do |key, value|
+            case value
+            when ActiveModel::Serialization
+              filtered_attributes[key] = value.serializable_hash
+            end
+          end
+
           if include_root_in_json?
             if json_api_format?
               { included_root_element => [filtered_attributes] }
