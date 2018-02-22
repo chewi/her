@@ -197,12 +197,13 @@ module Her
         #
         # @private
         def use_setter_methods(model, params = {})
-          reserved = [:id, model.class.primary_key, *model.class.association_keys]
-          model.class.attributes *params.keys.reject { |k| reserved.include?(k) }
+          assoc_keys = model.class.association_keys
+          reserved = [:id, model.class.primary_key, *assoc_keys]
+          model.class.attributes *(params.keys - reserved)
 
           params.each_with_object({}) do |(key, value), memo|
             setter_method = key.to_s + '='
-            if model.respond_to_without_missing?(setter_method)
+            if model.respond_to_without_missing?(setter_method) && (!assoc_keys.include?(key) || (!value.is_a?(Hash) && Array(value).any? { |v| !v.is_a?(Hash) }))
               model.send(setter_method, value)
             else
               memo[key.to_sym] = value

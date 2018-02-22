@@ -11,7 +11,7 @@ describe Her::Model::Associations do
 
       describe "[:has_many]" do
         subject { super()[:has_many] }
-        it { is_expected.to eql [{ name: :comments, data_key: :comments, default: [], class_name: "Comment", path: "/comments", inverse_of: nil }] }
+        it { is_expected.to eql [{ name: :comments, data_key: :comments, default: [], class_name: "Comment", path: "/comments", inverse_of: nil, autosave: true }] }
       end
     end
 
@@ -23,7 +23,7 @@ describe Her::Model::Associations do
 
       describe "[:has_many]" do
         subject { super()[:has_many] }
-        it { is_expected.to eql [{ name: :comments, data_key: :comments, default: [], class_name: "Comment", path: "/comments", inverse_of: nil }, { name: :posts, data_key: :posts, default: [], class_name: "Post", path: "/posts", inverse_of: nil }] }
+        it { is_expected.to eql [{ name: :comments, data_key: :comments, default: [], class_name: "Comment", path: "/comments", inverse_of: nil, autosave: true }, { name: :posts, data_key: :posts, default: [], class_name: "Post", path: "/posts", inverse_of: nil, autosave: true }] }
       end
     end
 
@@ -32,7 +32,7 @@ describe Her::Model::Associations do
 
       describe "[:has_one]" do
         subject { super()[:has_one] }
-        it { is_expected.to eql [{ name: :category, data_key: :category, default: nil, class_name: "Category", path: "/category" }] }
+        it { is_expected.to eql [{ name: :category, data_key: :category, default: nil, class_name: "Category", path: "/category", autosave: true }] }
       end
     end
 
@@ -44,7 +44,7 @@ describe Her::Model::Associations do
 
       describe "[:has_one]" do
         subject { super()[:has_one] }
-        it { is_expected.to eql [{ name: :category, data_key: :category, default: nil, class_name: "Category", path: "/category" }, { name: :role, data_key: :role, default: nil, class_name: "Role", path: "/role" }] }
+        it { is_expected.to eql [{ name: :category, data_key: :category, default: nil, class_name: "Category", path: "/category", autosave: true }, { name: :role, data_key: :role, default: nil, class_name: "Role", path: "/role", autosave: true }] }
       end
     end
 
@@ -53,7 +53,7 @@ describe Her::Model::Associations do
 
       describe "[:belongs_to]" do
         subject { super()[:belongs_to] }
-        it { is_expected.to eql [{ name: :organization, data_key: :organization, default: nil, class_name: "Organization", foreign_key: "organization_id", path: "/organizations/:id" }] }
+        it { is_expected.to eql [{ name: :organization, data_key: :organization, default: nil, class_name: "Organization", foreign_key: "organization_id", path: "/organizations/:id", autosave: true }] }
       end
     end
 
@@ -65,7 +65,7 @@ describe Her::Model::Associations do
 
       describe "[:belongs_to]" do
         subject { super()[:belongs_to] }
-        it { is_expected.to eql [{ name: :organization, data_key: :organization, default: nil, class_name: "Organization", foreign_key: "organization_id", path: "/organizations/:id" }, { name: :family, data_key: :family, default: nil, class_name: "Family", foreign_key: "family_id", path: "/families/:id" }] }
+        it { is_expected.to eql [{ name: :organization, data_key: :organization, default: nil, class_name: "Organization", foreign_key: "organization_id", path: "/organizations/:id", autosave: true }, { name: :family, data_key: :family, default: nil, class_name: "Family", foreign_key: "family_id", path: "/families/:id", autosave: true }] }
       end
     end
   end
@@ -80,7 +80,7 @@ describe Her::Model::Associations do
 
         describe "[:has_many]" do
           subject { super()[:has_many] }
-          it { is_expected.to eql [{ name: :comments, data_key: :user_comments, default: {}, class_name: "Post", path: "/comments", inverse_of: :admin }] }
+          it { is_expected.to eql [{ name: :comments, data_key: :user_comments, default: {}, class_name: "Post", path: "/comments", inverse_of: :admin, autosave: true }] }
         end
       end
 
@@ -89,7 +89,7 @@ describe Her::Model::Associations do
 
         describe "[:has_one]" do
           subject { super()[:has_one] }
-          it { is_expected.to eql [{ name: :category, data_key: :topic, default: nil, class_name: "Topic", foreign_key: "topic_id", path: "/category" }] }
+          it { is_expected.to eql [{ name: :category, data_key: :topic, default: nil, class_name: "Topic", foreign_key: "topic_id", path: "/category", autosave: true }] }
         end
       end
 
@@ -98,7 +98,7 @@ describe Her::Model::Associations do
 
         describe "[:belongs_to]" do
           subject { super()[:belongs_to] }
-          it { is_expected.to eql [{ name: :organization, data_key: :org, default: true, class_name: "Business", foreign_key: "org_id", path: "/organizations/:id" }] }
+          it { is_expected.to eql [{ name: :organization, data_key: :org, default: true, class_name: "Business", foreign_key: "org_id", path: "/organizations/:id", autosave: true }] }
         end
       end
     end
@@ -116,7 +116,7 @@ describe Her::Model::Associations do
 
         describe "[:has_many]" do
           subject { super()[:has_many] }
-          it { is_expected.to eql [{ name: :comments, data_key: :comments, default: [], class_name: "Post", path: "/comments", inverse_of: nil }] }
+          it { is_expected.to eql [{ name: :comments, data_key: :comments, default: [], class_name: "Post", path: "/comments", inverse_of: nil, autosave: true }] }
         end
       end
     end
@@ -133,6 +133,8 @@ describe Her::Model::Associations do
           stub.get("/users/1/comments") { [200, {}, [{ comment: { id: 4, body: "They're having a FIRESALE?" } }].to_json] }
           stub.get("/users/2/comments") { [200, {}, [{ comment: { id: 4, body: "They're having a FIRESALE?" } }, { comment: { id: 5, body: "Is this the tiny town from Footloose?" } }].to_json] }
           stub.get("/users/2/comments/5") { [200, {}, { comment: { id: 5, body: "Is this the tiny town from Footloose?" } }.to_json] }
+          stub.get("/users/2/comments/5/likes") { [200, {}, [{ like: { id: 1, liker_id: 1 } }].to_json] }
+          stub.get("/users/2/comments/5/deletion") { [200, {}, { deletion: { id: 1, deleter_id: 1 } }.to_json] }
           stub.get("/users/2/role") { [200, {}, { id: 2, body: "User" }.to_json] }
           stub.get("/users/1/role") { [200, {}, { id: 3, body: "User" }.to_json] }
           stub.get("/users/1/posts") { [200, {}, [{ id: 1, body: "blogging stuff", admin_id: 1 }].to_json] }
@@ -159,8 +161,19 @@ describe Her::Model::Associations do
       end
 
       spawn_model "Foo::Comment" do
+        collection_path "/users/:user_id/comments"
         belongs_to :user
+        has_many :likes
+        has_one :deletion
         parse_root_in_json true
+      end
+
+      spawn_model "Foo::Like" do
+        collection_path "/users/:user_id/comments/:comment_id/likes"
+      end
+
+      spawn_model "Foo::Deletion" do
+        collection_path "/users/:user_id/comments/:comment_id/deletion"
       end
 
       spawn_model "Foo::Post" do
@@ -171,7 +184,9 @@ describe Her::Model::Associations do
         parse_root_in_json true
       end
 
-      spawn_model "Foo::Role"
+      spawn_model "Foo::Role" do
+        belongs_to :user
+      end
 
       @user_with_included_data = Foo::User.find(1)
       @user_without_included_data = Foo::User.find(2)
@@ -191,8 +206,16 @@ describe Her::Model::Associations do
       expect(@user_with_included_data.comments.first.body).to eq("Tobias, you blow hard!")
     end
 
-    it "does not refetch the parents models data if they have been fetched before" do
+    it "does not refetch the parents models data if they have been fetched before for a has_many member" do
+      expect(@user_without_included_data.comments.find(5).user.object_id).to eq(@user_without_included_data.object_id)
+    end
+
+    it "does not refetch the parents models data if they have been fetched before for a has_many" do
       expect(@user_with_included_data.comments.first.user.object_id).to eq(@user_with_included_data.object_id)
+    end
+
+    it "does not refetch the parents models data if they have been fetched before for a has_one" do
+      expect(@user_with_included_data.role.user.object_id).to eq(@user_with_included_data.object_id)
     end
 
     it "does fetch the parent models data only once" do
@@ -301,6 +324,16 @@ describe Her::Model::Associations do
       expect(comment.id).to eq(5)
     end
 
+    it "uses nested path parameters from the parent when fetching a has_many" do
+      like = @user_without_included_data.comments.find(5).likes.first
+      expect(like.request_path).to eq('/users/2/comments/5/likes')
+    end
+
+    it "uses nested path parameters from the parent when fetching a has_one" do
+      deletion = @user_without_included_data.comments.find(5).deletion
+      expect(deletion.request_path).to eq('/users/2/comments/5/deletion')
+    end
+
     it "'s associations responds to #empty?" do
       expect(@user_without_included_data.organization.respond_to?(:empty?)).to be_truthy
       expect(@user_without_included_data.organization).not_to be_empty
@@ -322,6 +355,152 @@ describe Her::Model::Associations do
       params = @user_with_included_data.to_params
       expect(params[:organization]).to be_kind_of(Hash)
       expect(params[:organization]).not_to be_empty
+    end
+
+    context 'and send_only_modified_attributes is true' do
+      before do
+        Her::API.default_api.options[:send_only_modified_attributes] = true
+      end
+
+      it 'does not include unmodified has_many relationships in params' do
+        params = @user_with_included_data.to_params
+        expect(params[:comments]).to be_nil
+      end
+
+      it 'does not include an unmodified has_one relationship in params' do
+        params = @user_with_included_data.to_params
+        expect(params[:role]).to be_nil
+      end
+
+      it 'does not include an unmodified belongs_to relationship in params' do
+        params = @user_with_included_data.to_params
+        expect(params[:organization]).to be_nil
+      end
+
+      it 'includes a modified has_many relationship in params' do
+        @user_with_included_data.comments.last.body = 'Merry Christmas!'
+        params = @user_with_included_data.to_params
+        expect(params[:comments]).to be_kind_of(Array)
+        expect(params[:comments].length).to eq(1)
+      end
+
+      it 'includes a modified has_one relationship in params' do
+        @user_with_included_data.role.body = 'Guest'
+        params = @user_with_included_data.to_params
+        expect(params[:role]).to be_kind_of(Hash)
+        expect(params[:role]).not_to be_empty
+      end
+
+      it 'includes a modified belongs_to relationship in params' do
+        @user_with_included_data.organization.name = 'New Company'
+        params = @user_with_included_data.to_params
+        expect(params[:organization]).to be_kind_of(Hash)
+        expect(params[:organization]).not_to be_empty
+      end
+    end
+
+    context 'and autosave as nil' do
+      before do
+        Foo::User.associations.values.each do |assocs|
+          assocs.each do |assoc|
+            assoc[:autosave] = nil
+          end
+        end
+      end
+
+      it 'does not include persisted has_many relationships in params' do
+        params = @user_with_included_data.to_params
+        expect(params[:comments]).to be_nil
+      end
+
+      it 'does not include a persisted has_one relationship in params' do
+        params = @user_with_included_data.to_params
+        expect(params[:role]).to be_nil
+      end
+
+      it 'does not include a persisted belongs_to relationship in params' do
+        params = @user_with_included_data.to_params
+        expect(params[:organization]).to be_nil
+      end
+
+      it 'includes a new has_many relationship in params' do
+        new = @user_with_included_data.comments.build(body: 'Merry Christmas!')
+        @user_with_included_data.comments << new
+        params = @user_with_included_data.to_params
+        expect(params[:comments]).to be_kind_of(Array)
+        expect(params[:comments].length).to eq(1)
+      end
+
+      it 'includes a new has_one relationship in params' do
+        @user_with_included_data.role = Foo::Role.build(body: 'User')
+        params = @user_with_included_data.to_params
+        expect(params[:role]).to be_kind_of(Hash)
+        expect(params[:role]).not_to be_empty
+      end
+
+      it 'includes a new belongs_to relationship in params' do
+        @user_with_included_data.organization = Foo::Organization.build(name: 'Bluth Company')
+        params = @user_with_included_data.to_params
+        expect(params[:organization]).to be_kind_of(Hash)
+        expect(params[:organization]).not_to be_empty
+      end
+    end
+
+    context 'and autosave as false' do
+      before do
+        Foo::User.associations.values.each do |assocs|
+          assocs.each do |assoc|
+            assoc[:autosave] = false
+          end
+        end
+      end
+
+      it 'does not include persisted has_many relationships in params' do
+        params = @user_with_included_data.to_params
+        expect(params[:comments]).to be_nil
+      end
+
+      it 'does not include a persisted has_one relationship in params' do
+        params = @user_with_included_data.to_params
+        expect(params[:role]).to be_nil
+      end
+
+      it 'does not include a persisted belongs_to relationship in params' do
+        params = @user_with_included_data.to_params
+        expect(params[:organization]).to be_nil
+      end
+
+      it 'does not include a new has_many relationship in params' do
+        new = @user_with_included_data.comments.build(body: 'Merry Christmas!')
+        @user_with_included_data.comments << new
+        params = @user_with_included_data.to_params
+        expect(params[:comments]).to be_nil
+      end
+
+      it 'does not include a new has_one relationship in params' do
+        @user_with_included_data.role = Foo::Role.build(body: 'User')
+        params = @user_with_included_data.to_params
+        expect(params[:role]).to be_nil
+      end
+
+      it 'does not include a new belongs_to relationship in params' do
+        @user_with_included_data.organization = Foo::Organization.build(name: 'Bluth Company')
+        params = @user_with_included_data.to_params
+        expect(params[:organization]).to be_nil
+      end
+    end
+
+    it "changes the belongs_to foreign key value when a new resource is assigned" do
+      org1 = Foo::Organization.find(1)
+      @user_without_included_data.organization = org1
+      expect(@user_without_included_data.organization).to eq(org1)
+      expect(@user_without_included_data.changes).to eq('organization_id' => [2, 1])
+    end
+
+    it "nullifies the belongs_to foreign key value when a nil resource is assigned" do
+      @user_without_included_data.organization = nil
+      expect(@user_without_included_data.organization).to be_nil
+      expect(@user_without_included_data.changes).to eq('organization_id' => [2, nil])
     end
 
     [:create, :save_existing, :destroy].each do |type|
@@ -543,7 +722,21 @@ describe Her::Model::Associations do
 
   context "building and creating association data" do
     before do
-      spawn_model "Foo::Comment"
+      Her::API.setup url: "https://api.example.com" do |builder|
+        builder.use Her::Middleware::FirstLevelParseJSON
+        builder.use Faraday::Request::UrlEncoded
+        builder.adapter :test do |stub|
+          stub.get("/users/10/comments/new?body=Hello") { [200, {}, { id: nil, body: "Hello" }.to_json] }
+        end
+      end
+
+      spawn_model "Foo::Like" do
+        collection_path "/users/:user_id/comments/:comment_id/likes"
+      end
+      spawn_model "Foo::Comment" do
+        collection_path "/users/:user_id/comments"
+        has_many :likes
+      end
       spawn_model "Foo::User" do
         has_many :comments
       end
@@ -555,6 +748,30 @@ describe Her::Model::Associations do
         expect(@comment.body).to eq("Hello!")
         expect(@comment.user_id).to eq(10)
       end
+
+      it "caches the parent record when the inverse if present" do
+        Foo::Comment.belongs_to :user
+        @user = Foo::User.new(id: 10)
+        @comment = @user.comments.build
+        expect(@comment.user.object_id).to eq(@user.object_id)
+      end
+
+      it "does not cache the parent resource when inverse is missing" do
+        @user = Foo::User.new(id: 10)
+        @comment = @user.comments.build
+        expect(@comment.respond_to?(:user)).to be_falsey
+      end
+
+      it "uses nested path parameters from the parent when new object isn't requested" do
+        @like = Foo::User.new(:id => 10).comments.build(:id => 20).likes.build
+        @like.request_path.should == "/users/10/comments/20/likes"
+      end
+
+      it "uses nested path parameters from the parent when new object is requested" do
+        Foo::Comment.request_new_object_on_build true
+        @comment = Foo::User.new(:id => 10).comments.build(:body => "Hello")
+        @comment.request_path.should == "/users/10/comments"
+      end
     end
 
     context "with #create" do
@@ -564,7 +781,7 @@ describe Her::Model::Associations do
           builder.use Faraday::Request::UrlEncoded
           builder.adapter :test do |stub|
             stub.get("/users/10") { [200, {}, { id: 10 }.to_json] }
-            stub.post("/comments") { |env| [200, {}, { id: 1, body: Faraday::Utils.parse_query(env[:body])["body"], user_id: Faraday::Utils.parse_query(env[:body])["user_id"].to_i }.to_json] }
+            stub.post("/users/10/comments") { |env| [200, {}, { id: 1, body: Faraday::Utils.parse_query(env[:body])["body"], user_id: Faraday::Utils.parse_query(env[:body])["user_id"].to_i }.to_json] }
           end
         end
 
