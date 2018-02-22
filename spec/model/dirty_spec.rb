@@ -8,16 +8,24 @@ describe "Her::Model and ActiveModel::Dirty" do
         builder.use Her::Middleware::FirstLevelParseJSON
         builder.use Faraday::Request::UrlEncoded
         builder.adapter :test do |stub|
+          stub.get("/users")   { [200, {}, [{ id: 1, fullname: "Lindsay Fünke" }, { id: 2, fullname: "Maeby Fünke" }].to_json] }
           stub.get("/users/1") { [200, {}, { id: 1, fullname: "Lindsay Fünke" }.to_json] }
           stub.get("/users/2") { [200, {}, { id: 2, fullname: "Maeby Fünke" }.to_json] }
           stub.get("/users/3") { [200, {}, { user_id: 3, fullname: "Maeby Fünke" }.to_json] }
           stub.put("/users/1") { [200, {}, { id: 1, fullname: "Tobias Fünke" }.to_json] }
           stub.put("/users/2") { [400, {}, { errors: ["Email cannot be blank"] }.to_json] }
           stub.post("/users")  { [200, {}, { id: 1, fullname: "Tobias Fünke" }.to_json] }
+          stub.get("/users/1/posts") { [200, {}, [{ id: 1, user_id: 1, body: "Hello" }].to_json] }
+          stub.get("/users/1/posts/1") { [200, {}, { id: 1, user_id: 1, body: "Hello" }.to_json] }
         end
       end
 
+      spawn_model "Foo::Post" do
+        belongs_to :user
+        attributes :body
+      end
       spawn_model "Foo::User" do
+        has_many :posts
         attributes :fullname, :email
       end
       spawn_model "Dynamic::User" do
@@ -74,8 +82,34 @@ describe "Her::Model and ActiveModel::Dirty" do
       end
     end
 
+    context "for an existing resource from an association" do
+      let(:post) { Foo::User.find(1).posts.find(1) }
+      it "has no changes" do
+        expect(post.changes).to be_empty
+        expect(post).to_not be_changed
+      end
+    end
+
+    context "for an existing resource from an association collection" do
+      let(:post) { Foo::User.find(1).posts.first }
+      it "has no changes" do
+        expect(post.changes).to be_empty
+        expect(post).to_not be_changed
+      end
+    end
+
+    context "for resources from a collection" do
+      let(:users) { Foo::User.all.fetch }
+      it "has no changes" do
+        users.each do |user|
+          expect(user.changes).to be_empty
+          expect(user).to_not be_changed
+        end
+      end
+    end
+
     context "for new resource" do
-      let(:user) { Foo::User.new(fullname: "Lindsay Fünke") }
+      let(:user) { Foo::User.new(id: 1, fullname: "Lindsay Fünke") }
       it "has changes" do
         expect(user).to be_changed
       end
@@ -85,6 +119,26 @@ describe "Her::Model and ActiveModel::Dirty" do
         expect(user).to be_changed
         user.save
         expect(user).not_to be_changed
+      end
+      it "tracks a dirty :id primary key" do
+        expect(user.changes).to eq('id' => [nil, 1], "fullname" => [nil, "Lindsay Fünke"])
+        user.id = 2
+        expect(user.changes).to eq('id' => [nil, 2], "fullname" => [nil, "Lindsay Fünke"])
+      end
+      it "tracks a dirty custom primary key" do
+        user = Dynamic::User.new(user_id: 1, fullname: "Lindsay Fünke")
+        expect(user.changes).to eq('user_id' => [nil, 1], "fullname" => [nil, "Lindsay Fünke"])
+        user.user_id = 2
+        expect(user.changes).to eq('user_id' => [nil, 2], "fullname" => [nil, "Lindsay Fünke"])
+        user.id = 3
+        expect(user.changes).to eq('user_id' => [nil, 3], "fullname" => [nil, "Lindsay Fünke"])
+      end
+    end
+
+    context "for a new resource from an association" do
+      let(:post) { Foo::User.find(1).posts.build }
+      it "has changes" do
+        expect(post).to be_changed
       end
     end
   end
