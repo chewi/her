@@ -32,7 +32,7 @@ module Her
 
         # @private
         def to_params(attributes, changes={})
-          filtered_attributes = attributes.dup.symbolize_keys
+          filtered_attributes = attributes.symbolize_keys
 
           if her_api.options[:send_only_modified_attributes]
             filtered_attributes = changes.symbolize_keys.keys.inject({}) do |hash, attribute|
@@ -42,17 +42,6 @@ module Her
           end
 
           embed_params!(attributes, filtered_attributes)
-
-          # Faraday does not serialize everything thrown at it and
-          # some parameters may still be complex objects by this point
-          # so attempt to serialize further where possible. This is
-          # useful for classes that use ActiveModel but not Her.
-          filtered_attributes.each do |key, value|
-            case value
-            when ActiveModel::Serialization
-              filtered_attributes[key] = value.serializable_hash
-            end
-          end
 
           if include_root_in_json
             if json_api_format?
@@ -99,6 +88,26 @@ module Her
               end
 
             write_attributes[assoc[:data_key]] = value if value.present?
+          end
+
+          write_attributes.each do |key, value|
+            value =
+              case value
+              when Her::Collection
+                value.map(&:to_params).reject(&:empty?)
+              when Her::Model
+                value.to_params
+              when ActiveModel::Serialization
+                value.serializable_hash.symbolize_keys
+              end
+
+            if value
+              if value.empty?
+                write_attributes.delete(key)
+              else
+                write_attributes[key] = value
+              end
+            end
           end
         ensure
           Thread.current[:her_embedded_params_objects] = nil if first
